@@ -3,6 +3,7 @@ import './App.css'
 import { FiSave, FiCopy } from 'react-icons/fi'
 import { RiHistoryLine, RiCloseLine } from 'react-icons/ri'
 import { BiError } from 'react-icons/bi'
+import Welcome from './components/Welcome'
 
 function App() {
   const [prompt, setPrompt] = useState('')
@@ -13,6 +14,7 @@ function App() {
   const [showHistory, setShowHistory] = useState(false)
   const [error, setError] = useState(null)
   const [notification, setNotification] = useState(null)
+  const [showWelcome, setShowWelcome] = useState(true)
 
   // 从localStorage加载历史记录
   useEffect(() => {
@@ -135,119 +137,125 @@ function App() {
   }
 
   return (
-    <div className="app-container">
-      <div className="app-header">
-        <h1>喵绘星球</h1>
-        <p className="subtitle">AI 创作助手 - 让创作充满趣味</p>
-      </div>
-
-      <div className="toolbar">
-        <button 
-          className="history-btn"
-          onClick={() => setShowHistory(!showHistory)}
-        >
-          <RiHistoryLine /> 历史记录
-        </button>
-      </div>
-
-      <div className="input-section">
-        <textarea
-          value={prompt}
-          onChange={(e) => setPrompt(e.target.value)}
-          placeholder="请输入你想要的场景描述..."
-          disabled={loading}
-        />
-        <div className="button-group">
-          <button 
-            className={`generate-btn ${loading ? 'loading' : ''}`}
-            onClick={generateContent} 
-            disabled={loading}
-          >
-            <span className="button-text">{loading ? '创作中...' : '开始创作'}</span>
-            {loading && <div className="loader"></div>}
-          </button>
-          {prompt && (
-            <button 
-              className="clear-btn"
-              onClick={() => setPrompt('')}
-              disabled={loading}
-            >
-              <RiCloseLine /> 清空
-            </button>
-          )}
-        </div>
-      </div>
-      
-      {showHistory && (
-        <div className="history-panel">
-          <div className="history-header">
-            <h3>历史记录</h3>
-            {history.length > 0 && (
-              <button className="clear-history-btn" onClick={clearHistory}>
-                清空历史
-              </button>
-            )}
+    <>
+      {showWelcome ? (
+        <Welcome onStart={() => setShowWelcome(false)} />
+      ) : (
+        <div className="app-container">
+          <div className="app-header">
+            <h1>喵绘星球</h1>
+            <p className="subtitle">AI 创作助手 - 让创作充满趣味</p>
           </div>
-          {history.length === 0 ? (
-            <p className="empty-history">暂无历史记录喵~</p>
-          ) : (
-            <div className="history-list">
-              {history.map((item, index) => (
-                <div 
-                  key={index} 
-                  className="history-item"
-                  onClick={() => loadHistoryItem(item)}
+
+          <div className="toolbar">
+            <button 
+              className="history-btn"
+              onClick={() => setShowHistory(!showHistory)}
+            >
+              <RiHistoryLine /> 历史记录
+            </button>
+          </div>
+
+          <div className="input-section">
+            <textarea
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              placeholder="请输入你想要的场景描述..."
+              disabled={loading}
+            />
+            <div className="button-group">
+              <button 
+                className={`generate-btn ${loading ? 'loading' : ''}`}
+                onClick={generateContent} 
+                disabled={loading}
+              >
+                <span className="button-text">{loading ? '创作中...' : '开始创作'}</span>
+                {loading && <div className="loader"></div>}
+              </button>
+              {prompt && (
+                <button 
+                  className="clear-btn"
+                  onClick={() => setPrompt('')}
+                  disabled={loading}
                 >
-                  <p className="history-prompt">{item.prompt}</p>
-                  <span className="history-time">{item.timestamp}</span>
+                  <RiCloseLine /> 清空
+                </button>
+              )}
+            </div>
+          </div>
+          
+          {showHistory && (
+            <div className="history-panel">
+              <div className="history-header">
+                <h3>历史记录</h3>
+                {history.length > 0 && (
+                  <button className="clear-history-btn" onClick={clearHistory}>
+                    清空历史
+                  </button>
+                )}
+              </div>
+              {history.length === 0 ? (
+                <p className="empty-history">暂无历史记录喵~</p>
+              ) : (
+                <div className="history-list">
+                  {history.map((item, index) => (
+                    <div 
+                      key={index} 
+                      className="history-item"
+                      onClick={() => loadHistoryItem(item)}
+                    >
+                      <p className="history-prompt">{item.prompt}</p>
+                      <span className="history-time">{item.timestamp}</span>
+                    </div>
+                  ))}
                 </div>
-              ))}
+              )}
+            </div>
+          )}
+          
+          {error && (
+            <div className="error-message">
+              <BiError /> {error}
+            </div>
+          )}
+
+          {notification && (
+            <div className={`notification ${notification.type}`}>
+              {notification.message}
+            </div>
+          )}
+          
+          {response && (
+            <div className="response-section">
+              <div className="section-header">
+                <h2>AI回应：</h2>
+                <button 
+                  className="copy-btn"
+                  onClick={() => copyToClipboard(response)}
+                >
+                  <FiCopy /> 复制
+                </button>
+              </div>
+              <p>{response}</p>
+            </div>
+          )}
+          
+          {imageUrl && (
+            <div className="image-section">
+              <div className="image-header">
+                <h2>生成的图片：</h2>
+                <button className="save-btn" onClick={saveImage}>
+                  <FiSave /> 保存图片
+                </button>
+              </div>
+              <div className="image-container">
+                <img src={imageUrl} alt="生成的图片" loading="lazy" />
+              </div>
             </div>
           )}
         </div>
       )}
-      
-      {error && (
-        <div className="error-message">
-          <BiError /> {error}
-        </div>
-      )}
-
-      {notification && (
-        <div className={`notification ${notification.type}`}>
-          {notification.message}
-        </div>
-      )}
-      
-      {response && (
-        <div className="response-section">
-          <div className="section-header">
-            <h2>AI回应：</h2>
-            <button 
-              className="copy-btn"
-              onClick={() => copyToClipboard(response)}
-            >
-              <FiCopy /> 复制
-            </button>
-          </div>
-          <p>{response}</p>
-        </div>
-      )}
-      
-      {imageUrl && (
-        <div className="image-section">
-          <div className="image-header">
-            <h2>生成的图片：</h2>
-            <button className="save-btn" onClick={saveImage}>
-              <FiSave /> 保存图片
-            </button>
-          </div>
-          <div className="image-container">
-            <img src={imageUrl} alt="生成的图片" loading="lazy" />
-          </div>
-        </div>
-      )}
-    </div>
+    </>
   )
 }
 
